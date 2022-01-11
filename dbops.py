@@ -1,4 +1,5 @@
-# this is a clone of dbops.py from nfbackend
+# this is a clone of dbops.py from nfbackend; do not edit here; edit in nfbackend
+
 import pymongo
 import string
 import secrets
@@ -25,16 +26,16 @@ def insert_user(firstName,lastName,email,password,signupdate,organizationID,role
 
         users = db["users"]
         user = {
-        		"firstName": firstName,
+                "firstName": firstName,
                 "lastName": lastName, 
-        		"email":email, 
-        		"password": password,
-        		"role":role,
-        		"parentEmail":parentemail,
+                "email":email, 
+                "password": password,
+                "role":role,
+                "parentEmail":parentemail,
                 "organizationID":organizationID,
-        		"signupDate":signupdate,
+                "signupDate":signupdate,
                 "disabled":False
-        		}
+                }
         
         r = users.insert_one(user)
 
@@ -674,7 +675,7 @@ def update_accuracy_test_details(test,field,value):
 
 
 def insert_imageclassification_accuracytest(creatorID,testboard_snapshot,start_time,end_time,num_test_images,
-                                            test_type,test_status,accuracy,confusion_matrix):
+                                            test_type,test_status,accuracy,confusion_matrix,machineid):
 
 
     coll = db["tests"]
@@ -687,7 +688,8 @@ def insert_imageclassification_accuracytest(creatorID,testboard_snapshot,start_t
             "testType":test_type ,
             "testStatus":test_status ,
             "accuracy":accuracy ,
-            "confusionMatrix":confusion_matrix
+            "confusionMatrix":confusion_matrix,
+            "machineID":machineid
             }
     try:
         r = coll.insert_one(doc)
@@ -902,7 +904,7 @@ def update_functional_testcase(testcaseID,testcaseName,testcaseValues,userID):
 
 
 def insert_functionaltest(creatorID,testboard_snapshot,start_time,end_time,
-    total_cases_count,passed_cases_count,failed_cases_count,remarks,test_type,test_status):
+    total_cases_count,passed_cases_count,failed_cases_count,remarks,test_type,test_status,machineid):
 
 
     coll = db["tests"]
@@ -916,7 +918,8 @@ def insert_functionaltest(creatorID,testboard_snapshot,start_time,end_time,
             "passedCasesCount":passed_cases_count,
             "failedCasesCount":failed_cases_count,
             "totalCasesCount":total_cases_count,
-            "remarks":remarks
+            "remarks":remarks,
+            "machineID":machineid
         }
     try:
         r = coll.insert_one(doc)
@@ -1037,9 +1040,5 @@ def insert_accuracytest(creatorID,testboard_snapshot,start_time,end_time,num_tes
         return False
 
     return str(r.inserted_id)
-
-
-
-
 
 

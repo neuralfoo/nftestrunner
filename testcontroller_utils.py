@@ -55,13 +55,14 @@ def start_functional_test(testboardID,userID):
 		remarks 			= ""
 		test_status 		= "running"
 		test_type 			= "functionaltest"
+		machineid 			= os.environ['MACHINE_ID']
 
 		testID = dbops.insert_functionaltest(
 			userID,
 			testboard_snapshot,
 			start_time,end_time,
 			total_cases_count,passed_cases_count,failed_cases_count,
-			remarks,test_type,test_status)
+			remarks,test_type,test_status,machineid)
 
 		retval = os.system(f"pm2 start functionaltest_driver.py --interpreter python3.8 --name {testID} --no-autorestart -- {testID}")
 
@@ -85,12 +86,13 @@ def start_imageclassification_accuracy_test(testboardID,userID):
 		test_status 		= "running"
 		test_type 			= "imageclassification_accuracytest"
 		num_test_images 	= len(dbops.get_images_for_testboard(testboardID))
+		machineid 			= os.environ['MACHINE_ID']
 
 		testID = dbops.insert_imageclassification_accuracytest(
 			userID,
 			testboard_snapshot,
 			start_time,end_time,num_test_images,
-			test_type,test_status,accuracy,confusion_matrix)
+			test_type,test_status,accuracy,confusion_matrix,machineid)
 
 		retval = os.system(f"pm2 start imageclassification_accuracy_test_driver.py --interpreter python3.8 --name {testID} --no-autorestart -- {testID}")
 		# print(retval)
