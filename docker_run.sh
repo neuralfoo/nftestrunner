@@ -1,0 +1,1 @@
+sudo docker run --rm -dt --network=host -e MACHINE_ID=alpha --name nft nf-testrunner:1 bash ./startup.sh
