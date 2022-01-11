@@ -63,7 +63,7 @@ def testcontroller_start():
             message = "Unexpected error occurred."
             return utils.return_400_error(message)
 
-        logger.info(f"Accuracy test successfully {action}ed")
+        logger.info(f"{testType} test successfully started")
 
         return utils.return_200_response({"message":msg,"status":200})
     
@@ -122,7 +122,7 @@ def testcontroller_stop():
             message = "Unexpected error occurred."
             return utils.return_400_error(message)
 
-        logger.info(f"Accuracy test successfully {action}ed")
+        logger.info(f"Test {testID} successfully stopped")
 
         return utils.return_200_response({"message":msg,"status":200})
     
@@ -134,4 +134,5 @@ def testcontroller_stop():
         traceback.print_exc()
 
         return utils.return_400_error(message)
+
 
