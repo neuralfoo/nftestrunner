@@ -1042,3 +1042,20 @@ def insert_accuracytest(creatorID,testboard_snapshot,start_time,end_time,num_tes
     return str(r.inserted_id)
 
 
+def get_webhook_hits(testboardID,testType):
+
+    collection = db["webhook_hits"]
+    details = collection.find({"testboardID":testboardID,"testType":testType})
+    return list(details)
+    
+def delete_webhook_hits(testboardID,testType):
+
+    try:
+        collection = db["webhook_hits"]
+        collection.delete_many({"testboardID":testboardID,"testType":testType})
+        return True
+
+    except Exception as e:
+        logger.error("Error while deleting webhook_hits related to testboard. "+str(e))
+        traceback.print_exc()
+        return False

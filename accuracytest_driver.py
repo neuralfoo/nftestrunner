@@ -21,87 +21,96 @@ if __name__=="__main__":
 
 	import sys
 
-	testID = sys.argv[1]
-	logger.info(f"Received testID {testID}")
+	try:
 
-	test_details = dbops.get_test(testID)
-	logger.info(f"Test object fetched {test_details}")
+		testID = sys.argv[1]
+		logger.info(f"Received testID {testID}")
 
-	request_list = api_controller.extract_requests_from_testboard(test_details["testboard"])
-	logger.info(f"Request list generated")
+		test_details = dbops.get_test(testID)
+		logger.info(f"Test object fetched {test_details}")
 
-	testcases_list = dbops.list_accuracy_testcases(test_details["testboard"]["testboardID"])
-	logger.info(f"Testcases received")
+		request_list = api_controller.extract_requests_from_testboard(test_details["testboard"])
+		logger.info(f"Request list generated")
 
-	passed_cases_count = 0
-	failed_cases_count = 0
+		testboardID = test_details["testboard"]["testboardID"]
 
-	correct_occurrence = defaultdict(lambda:0)
-	total_occurrence = defaultdict(lambda:0)
+		testcases_list = dbops.list_accuracy_testcases(test_details["testboard"]["testboardID"])
+		logger.info(f"Testcases received")
 
-	average_accuracy = 0
+		callbacksEnabled = test_details["testboard"]["callbacksEnabled"]
 
-	for testcase in testcases_list:
-	
-		api_hit_result = api_controller.accuracy_api_runner(testcase,request_list)
+		passed_cases_count = 0
+		failed_cases_count = 0
 
-		api_hit_result["testID"] = testID
+		correct_occurrence = defaultdict(lambda:0)
+		total_occurrence = defaultdict(lambda:0)
 
-		dbops.insert_api_hit(api_hit_result)
+		average_accuracy = 0
 
-
-		responseVariables = json.loads(api_hit_result["expectedResponseVariables"]) 
-
-		print(responseVariables)
-
-		for key in responseVariables:
-			total_occurrence[key] += 1
-
-
-		if api_hit_result["result"] == True:
-			passed_cases_count += 1
-
-			for key in api_hit_result["accuracy_dict"]:
-
-				correct_occurrence[key] += api_hit_result["accuracy_dict"][key]
-
-
-		if api_hit_result["result"] == False:
-			failed_cases_count += 1
-
-		logger.info("api_hit_result")
-		logger.info(api_hit_result)
-
-		logger.info(f"Passed test cases: {passed_cases_count}")
-		logger.info(f"Failed test cases: {failed_cases_count}")
-
-		dbops.update_test(testID,"passedCasesCount",passed_cases_count)
-		dbops.update_test(testID,"failedCasesCount",failed_cases_count)
+		for testcase in testcases_list:
 		
-		dbops.update_test(testID,"correctOccurrence",correct_occurrence)
-		dbops.update_test(testID,"totalOccurrence",total_occurrence)
+			api_hit_result = api_controller.accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID)
 
-		i = 0
-		total_acc = 0
-		for key in correct_occurrence:
+			api_hit_result["testID"] = testID
 
-			total_acc += ((correct_occurrence[key]/total_occurrence[key])*100)
-			i += 1
-
-		average_accuracy = total_acc/i
-
-		dbops.update_test(testID,"averageAccuracy",average_accuracy)
+			dbops.insert_api_hit(api_hit_result)
 
 
-	end_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+			responseVariables = json.loads(api_hit_result["expectedResponseVariables"]) 
 
-	dbops.update_test(testID,"endTime",end_time)
+			print(responseVariables)
 
-	lastrunon = datetime.datetime.now().strftime("%d %b '%y %H:%M:%S")
-	dbops.update_testboard(test_details["testboard"]["testboardID"],"apiLastRunOn",lastrunon)
-	
-	dbops.update_test(testID,"testStatus","completed")
+			for key in responseVariables:
+				total_occurrence[key] += 1
 
 
+			if api_hit_result["result"] == True:
+				passed_cases_count += 1
+
+				for key in api_hit_result["accuracy_dict"]:
+
+					correct_occurrence[key] += api_hit_result["accuracy_dict"][key]
+
+
+			if api_hit_result["result"] == False:
+				failed_cases_count += 1
+
+			logger.info("api_hit_result")
+			logger.info(api_hit_result)
+
+			logger.info(f"Passed test cases: {passed_cases_count}")
+			logger.info(f"Failed test cases: {failed_cases_count}")
+
+			dbops.update_test(testID,"passedCasesCount",passed_cases_count)
+			dbops.update_test(testID,"failedCasesCount",failed_cases_count)
+			
+			dbops.update_test(testID,"correctOccurrence",correct_occurrence)
+			dbops.update_test(testID,"totalOccurrence",total_occurrence)
+
+			i = 0
+			total_acc = 0
+			for key in correct_occurrence:
+
+				total_acc += ((correct_occurrence[key]/total_occurrence[key])*100)
+				i += 1
+
+			average_accuracy = total_acc/i
+
+			dbops.update_test(testID,"averageAccuracy",average_accuracy)
+
+
+		end_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+		dbops.update_test(testID,"endTime",end_time)
+
+		lastrunon = datetime.datetime.now().strftime("%d %b '%y %H:%M:%S")
+		dbops.update_testboard(test_details["testboard"]["testboardID"],"apiLastRunOn",lastrunon)
+		
+		dbops.update_test(testID,"testStatus","completed")
+
+	except Exception as e:
+
+		traceback.print_exc()
+		dbops.update_test(testID,"testStatus","error")
 
 

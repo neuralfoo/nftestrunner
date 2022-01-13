@@ -460,9 +460,27 @@ def functional_api_runner(testcase,request_list):
 	return request_result
 
 
+def poll_for_response_from_webhook(testboardID,testType):
 
-def accuracy_api_runner(testcase,request_list):
+	hits = []
 
+	print(testboardID,testType)
+
+	while True:
+		
+		time.sleep(2)
+		hits = dbops.get_webhook_hits(testboardID,testType)
+		print(hits)
+		if len(hits) > 0:
+			break
+
+	return json.loads(hits[-1]["data"])
+
+
+def accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID):
+
+
+	dbops.delete_webhook_hits(testboardID,"accuracy")
 
 	request_result = {}
 
@@ -565,17 +583,46 @@ def accuracy_api_runner(testcase,request_list):
 			individual_response_times.append(diff)
 
 			request_result["responseCode"+str(i)] = str(response.status_code)
-			request_result["responseBody"+str(i)] = str(response.text)
+			
 
 			print(response.json())
 
-		if r["responseBodyType"] == "json":
+		if r["responseBodyType"] == "json" and callbacksEnabled == False:
 
 			# print(response.json())
 
 			try:
+				
+				request_result["responseBody"+str(i)] = str(response.text)
+
 				output_dict = extract_variables_from_response(r["responseBody"],response.json())
 				
+				# merging incase output of one request needs to be used in the next one.
+				global_input_variables_dict = {**global_input_variables_dict, **output_dict}
+				
+				# merging all final outputs after each request
+				global_output_variables_dict = {**global_output_variables_dict, **output_dict}
+
+
+			except Exception as e:
+
+				logger.error(e)
+				traceback.print_exc()
+				final_result = False
+				reasons = "Could not parse response; "
+				break;
+		
+		elif r["responseBodyType"] == "json" and callbacksEnabled == True:			
+
+			try:
+				response_json = poll_for_response_from_webhook(testboardID,"accuracy")
+
+				request_result["responseBody"+str(i)] = json.dumps(response_json)
+
+				output_dict = extract_variables_from_response(r["responseBody"],response_json)
+				
+				print("output dict",output_dict)
+
 				# merging incase output of one request needs to be used in the next one.
 				global_input_variables_dict = {**global_input_variables_dict, **output_dict}
 				
@@ -588,8 +635,7 @@ def accuracy_api_runner(testcase,request_list):
 				traceback.print_exc()
 				final_result = False
 				reasons = "Could not parse response; "
-				break;
-			
+				break;	
 
 		i+=1
 
