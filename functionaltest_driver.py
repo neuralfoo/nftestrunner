@@ -40,6 +40,7 @@ if __name__=="__main__":
 
 		except Exception as e:
 			logger.error("Error in processing request.")
+			traceback.print_exc()
 
 			api_hit_result = {}
 
@@ -52,13 +53,13 @@ if __name__=="__main__":
 
 
 			for i in range(1,len(request_list)+1):
-				api_hit_result["requestBody"+str(i)] = ""
-				api_hit_result["expectedResponseCode"+str(i)] = ""
-				api_hit_result["receivedResponseCode"+str(i)] = ""
-				api_hit_result["expectedResponseTime"+str(i)] = ""
-				api_hit_result["receivedResponseTime"+str(i)] = ""
-				api_hit_result["expectedResponseBody"+str(i)] = ""
-				api_hit_result["receivedResponseBody"+str(i)] = ""
+				api_hit_result["requestBody"+str(i)] = "{}"
+				api_hit_result["expectedResponseCode"+str(i)] = "-"
+				api_hit_result["receivedResponseCode"+str(i)] = "-"
+				api_hit_result["expectedResponseTime"+str(i)] = "0"
+				api_hit_result["receivedResponseTime"+str(i)] = "0"
+				api_hit_result["expectedResponseBody"+str(i)] = "{}"
+				api_hit_result["receivedResponseBody"+str(i)] = "{}"
 
 		api_hit_result["testID"] = testID
 

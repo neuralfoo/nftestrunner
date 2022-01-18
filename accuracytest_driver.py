@@ -49,7 +49,32 @@ if __name__=="__main__":
 
 		for testcase in testcases_list:
 		
-			api_hit_result = api_controller.accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID)
+			try:
+				api_hit_result = api_controller.accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID)
+
+			except Exception as e:
+				logger.error(e)
+				traceback.print_exc()
+
+				api_hit_result = {}
+				api_hit_result["testcaseID"] = str(testcase["_id"])
+				api_hit_result["result"] = False
+				api_hit_result["totalResponseTime"] = 0
+				api_hit_result["individualResponseTimes"] = [0]
+				api_hit_result["remarks"] = "Error while executing request, fix testcase."
+				
+				api_hit_result["expectedResponseVariables"] = "{}"
+				api_hit_result["receivedResponseVariables"] = "{}"
+				# accuracy will be determined based on equality of these two dictionaries
+				
+				api_hit_result["requestVariables"] = "{}"
+
+
+				for j in range(1,len(request_list)+1):
+					api_hit_result["requestBody"+str(j)] = "{}"
+					api_hit_result["responseBody"+str(j)] = "{}"
+					api_hit_result["responseCode"+str(j)] = "-"
+
 
 			api_hit_result["testID"] = testID
 

@@ -670,12 +670,9 @@ def accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID):
 	request_result["totalResponseTime"] = total_response_time
 	request_result["individualResponseTimes"] = individual_response_times
 	request_result["remarks"] = reasons
-
 	request_result["requestVariables"] = testcase["requestVariables"]
-
 	request_result["expectedResponseVariables"] = json.dumps(responseVariables)
 	request_result["receivedResponseVariables"] = json.dumps(global_output_variables_dict)
-
 	request_result["accuracy_dict"] = accuracy_dict
 	
 
