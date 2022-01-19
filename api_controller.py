@@ -139,6 +139,22 @@ def place_variables_in_request_json(request_string,variables):
 	return json.loads(request_string)
 
 
+def place_variables_in_request_text(request_string,variables):
+
+	'''
+		variables is a dict 
+		variables["input"] = value of input
+		
+	'''
+	# print(variables)
+	for v in variables:
+		m = "${"+v+"}$" in request_string
+		if m:
+			request_string = re.sub("\${"+v+"}\$",str(variables[v]),request_string)
+
+	return request_string
+
+
 def imageclassification_accuracy_api_runner(imageID,request_list):
 
 	input_image_data = dbops.get_image_details(imageID)
@@ -387,10 +403,11 @@ def functional_api_runner(testcase,request_list):
 		
 		request_result["requestBody"+str(i)] = req_values["requestBody"]
 
+		start_time = 0
+		end_time = 0
+
 		input_data = None
 		if r["requestBodyType"] == "json":
-			# input_data = place_variables_in_request_json(r["requestBody"],global_variables_dict)
-
 
 			start_time = time.monotonic()
 
@@ -402,25 +419,38 @@ def functional_api_runner(testcase,request_list):
 
 			end_time = time.monotonic()
 
-			diff = round(end_time-start_time,3)
-			total_response_time += diff
-			individual_response_times.append(diff)
+		elif r["requestBodyType"] == "rawText":
 
-			request_result["expectedResponseCode"+str(i)] = str(req_values["responseCode"])
-			request_result["receivedResponseCode"+str(i)] = str(response.status_code)
+			start_time = time.monotonic()
 
-			print(str(response.status_code),str(req_values["responseCode"]))
+			response = requests.request(method=r["method"],
+				url=r["endpoint"],
+				data=str(req_values["requestBody"]),
+				headers=headers
+				)
 
-			if request_result["expectedResponseCode"+str(i)] != request_result["receivedResponseCode"+str(i)]:
-				final_result = False
-				reasons += "Response code mismatch; "
+			end_time = time.monotonic()
 
-			request_result["expectedResponseTime"+str(i)] = req_values["responseTime"]
-			request_result["receivedResponseTime"+str(i)] = diff
 
-			if float(request_result["expectedResponseTime"+str(i)]) < float(diff):
-				final_result = False
-				reasons += "Response Time exceeded; "
+		diff = round(end_time-start_time,3)
+		total_response_time += diff
+		individual_response_times.append(diff)
+
+		request_result["expectedResponseCode"+str(i)] = str(req_values["responseCode"])
+		request_result["receivedResponseCode"+str(i)] = str(response.status_code)
+
+		print(str(response.status_code),str(req_values["responseCode"]))
+
+		if request_result["expectedResponseCode"+str(i)] != request_result["receivedResponseCode"+str(i)]:
+			final_result = False
+			reasons += "Response code mismatch; "
+
+		request_result["expectedResponseTime"+str(i)] = req_values["responseTime"]
+		request_result["receivedResponseTime"+str(i)] = diff
+
+		if float(request_result["expectedResponseTime"+str(i)]) < float(diff):
+			final_result = False
+			reasons += "Response Time exceeded; "
 
 		if r["responseBodyType"] == "json":
 
@@ -561,7 +591,6 @@ def accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID):
 		
 		input_data = None
 		if r["requestBodyType"] == "json":
-			# input_data = place_variables_in_request_json(r["requestBody"],global_variables_dict)
 
 			request_body = place_variables_in_request_json(request_body,global_input_variables_dict)
 			request_result["requestBody"+str(i)] = json.dumps(request_body)
@@ -584,8 +613,29 @@ def accuracy_api_runner(testcase,request_list,callbacksEnabled,testboardID):
 
 			request_result["responseCode"+str(i)] = str(response.status_code)
 			
+		elif r["requestBodyType"] == "rawText":
 
-			print(response.json())
+			request_body_string = place_variables_in_request_text(request_body,global_input_variables_dict)
+			request_result["requestBody"+str(i)] = request_body_string
+
+			start_time = time.monotonic()
+
+			print("request_body_string: ",request_body_string)
+
+			response = requests.request(method=r["method"],
+				url=r["endpoint"],
+				data=request_body_string,
+				headers=headers
+				)
+
+			end_time = time.monotonic()
+
+			diff = round(end_time-start_time,3)
+			total_response_time += diff
+			individual_response_times.append(diff)
+
+			request_result["responseCode"+str(i)] = str(response.status_code)
+
 
 		if r["responseBodyType"] == "json" and callbacksEnabled == False:
 

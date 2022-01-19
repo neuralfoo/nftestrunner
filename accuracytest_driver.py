@@ -119,7 +119,7 @@ if __name__=="__main__":
 				total_acc += ((correct_occurrence[key]/total_occurrence[key])*100)
 				i += 1
 
-			average_accuracy = total_acc/i
+			average_accuracy = total_acc/(i+0.00000001)
 
 			dbops.update_test(testID,"averageAccuracy",average_accuracy)
 
